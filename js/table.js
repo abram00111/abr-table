@@ -26,7 +26,9 @@ if(settings.sorting ===true) {
         //Если в таблице нет класса отключающего сортировку
         if($(this).parents('table').hasClass('abr-off-sorting'))return;
 
+        //Удаляем символ сортровки
         $(this).parents('table').find('.sort').remove();
+
         let table = $(this).parents('table').eq(0)
         let rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
         this.asc = !this.asc
@@ -50,7 +52,7 @@ if(settings.sorting ===true) {
     }
 
     function getCellValue(row, index) {
-        return $(row).children('td').eq(index).text()
+        return $(row).children('td').eq(index).text().toLowerCase().trim()
     }
 }
 // __________СОРТИРОВКА ТАБЛИЦЫ end____________
