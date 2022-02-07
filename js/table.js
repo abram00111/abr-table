@@ -4,6 +4,7 @@ let nubmer_table = 0;
 const settings = Object.fromEntries([
     ['search', true], //поиск
     ['sorting', true], //сортировка
+    ['paginator', true], //Пагинация
 ]);
 
 
@@ -18,11 +19,29 @@ $('.abr-table').each(function(){
         //Добавляем поле фильтра по таблице
         $(this).before('<div class="abr-search"><label for="search'+nubmer_table+'">Поиск </label> <input type="search" id="table'+nubmer_table+'"></div>')
     }
+    if(settings.paginator ===true && !$(this).hasClass('abr-off-paginator')){
+        $(this).after(
+            '<div class="pagination-container" >' +
+                '<nav>' +
+                    '<ul class="pagination">' +
+                        '<li data-page="prev" >' +
+                            '<span> &#171 <span class="sr-only"></span></span>' +
+                        '</li>' +
+                        '<li data-page="next" id="prev">' +
+                            '<span> &#187 <span class="sr-only"></span></span>' +
+                        '</li>' +
+                    '</ul>' +
+                '</nav>' +
+            '</div>');
+    }
 })
+
+
+
 
 // __________СОРТИРОВКА ТАБЛИЦЫ start____________
 if(settings.sorting ===true) {
-    $('.abr-table thead tr *').click(function () {
+    $('.abr-table thead tr *').click(function sort_s() {
         //Если в таблице нет класса отключающего сортировку
         if($(this).parents('table').hasClass('abr-off-sorting'))return;
 

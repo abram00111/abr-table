@@ -44,10 +44,12 @@
                     <th>text</th>
                 </tr>
             </thead>
+
             <tbody>
             <?php
                 $arr = array(1, -1);
-                for ($i=0; $i<=20; $i++){
+                //рандомно заполняем таблицу
+                for ($i=0; $i<=100; $i++){
                     ?>
                     <tr>
                         <td><?= $i ?></td>
@@ -72,6 +74,7 @@
                 <th>text</th>
             </tr>
             </thead>
+
             <tbody>
             <?php
             $arr = array(1, -1);

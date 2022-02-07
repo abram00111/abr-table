@@ -1,6 +1,9 @@
 .abr-table{
     margin-bottom: 30px;
 }
+.abr-table tbody{
+    position: relative;
+}
 .abr-search{
     text-align: right;
 }
@@ -19,4 +22,9 @@
     font-weight: 700;
     font-size: 18px;
 }
+.pagination li:hover{
+    cursor: pointer;
+}
+
+
 
