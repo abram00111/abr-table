@@ -5,6 +5,7 @@ const settings = Object.fromEntries([
     ['search', true], //поиск
     ['sorting', true], //сортировка
     ['paginator', true], //Пагинация
+    ['paginatorCountRow', 5] // кол-во строк в таблице отображаемых при пагинации
 ]);
 
 
@@ -12,28 +13,45 @@ const settings = Object.fromEntries([
 $('.abr-table').each(function(){
     nubmer_table++;
     //добавляем класс к таблице (это необходимо, если таблиц будет несколько, то именно этот по этому классу будем обращаться)
-    $(this).addClass('table'+nubmer_table);
+    $(this).addClass('abr-table'+nubmer_table);
+    $(this).attr('data-tableID',nubmer_table);
 
     //Если в настройках включена функция поиска, и таблица НЕ содержит класс "abr-off-search"
     if(settings.search ===true && !$(this).hasClass('abr-off-search')){
         //Добавляем поле фильтра по таблице
-        $(this).before('<div class="abr-search"><label for="search'+nubmer_table+'">Поиск </label> <input type="search" id="table'+nubmer_table+'"></div>')
+        $(this).before('<div class="abr-search"><label for="search'+nubmer_table+'">Поиск </label> <input type="search" id="abr-table'+nubmer_table+'"></div>')
     }
+
+    //если включена пагинация
     if(settings.paginator ===true && !$(this).hasClass('abr-off-paginator')){
+        let count_row = settings.paginatorCountRow;
+
         $(this).after(
-            '<div class="pagination-container" >' +
+            '<div class="abr-pagination-container" >' +
                 '<nav>' +
-                    '<ul class="pagination">' +
-                        '<li data-page="prev" >' +
-                            '<span> &#171 <span class="sr-only"></span></span>' +
+                    '<ul class="abr-pagination abr-pagination'+nubmer_table+'">' +
+                        '<li data-page="prev" class="abr-paginator-prev">' +
+                            '<span> &#171</span>' +
                         '</li>' +
-                        '<li data-page="next" id="prev">' +
-                            '<span> &#187 <span class="sr-only"></span></span>' +
+
+                        '<div class="abr-pagination-number"></div>'+
+
+                        '<li data-page="next" class="abr-paginator-next">' +
+                            '<span> &#187</span>' +
                         '</li>' +
                     '</ul>' +
                 '</nav>' +
             '</div>');
+        //проверяем если есть корректный атрибут data-paginator, то выводим столько строк сколько указано в атрибуте
+        if($('.abr-table'+nubmer_table).attr('data-paginator') != undefined
+            && $('.abr-table'+nubmer_table).attr('data-paginator') != ''
+            && $('.abr-table'+nubmer_table).attr('data-paginator') > 0){
+            count_row = $('.abr-table'+nubmer_table).attr('data-paginator');
+        }
+
+        paginator('.abr-table'+nubmer_table, 1, count_row)
     }
+
 })
 
 
@@ -52,6 +70,7 @@ if(settings.sorting ===true) {
         let rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
         this.asc = !this.asc
 
+
         if (!this.asc) {
             rows = rows.reverse();
             $(this).append('<i style="" class="sort">↓</i>')
@@ -60,6 +79,21 @@ if(settings.sorting ===true) {
         }
         for (let i = 0; i < rows.length; i++) {
             table.append(rows[i])
+        }
+
+        //если включена пагинация
+        if(settings.paginator ===true && !$(this).hasClass('abr-off-paginator')) {
+            $('.abr-table'+table.attr('data-tableid')+' tbody tr').show()
+
+            let count_row = settings.paginatorCountRow;
+            //проверяем если есть корректный атрибут data-paginator, то выводим столько строк сколько указано в атрибуте
+            if($('.abr-table'+table.attr('data-tableid')).attr('data-paginator') != undefined
+                && $('.abr-table'+table.attr('data-tableid')).attr('data-paginator') != ''
+                && $('.abr-table'+table.attr('data-tableid')).attr('data-paginator') > 0){
+                count_row = $('.abr-table'+table.attr('data-tableid')).attr('data-paginator');
+            }
+
+            paginator('.abr-table'+table.attr('data-tableid'), 1, count_row)
         }
     })
 
@@ -73,8 +107,14 @@ if(settings.sorting ===true) {
     function getCellValue(row, index) {
         return $(row).children('td').eq(index).text().toLowerCase().trim()
     }
+
+
 }
 // __________СОРТИРОВКА ТАБЛИЦЫ end____________
+
+
+
+
 
 
 
@@ -107,135 +147,142 @@ $("input[type='search']").on('input',function () {
     }else{
         $('.'+table).find('.no-tr').remove()
     }
+
 });
 // __________ПОИСК ПО ТАБЛИЦЕ end____________
 
 
 
+
+
+
+
+
 //__________ПАГИНАЦИЯ start____________
-function getPagination(table) {
-    var lastPage = 1;
 
-    $('#maxRows')
-        .on('change', function(evt) {
-            //$('.paginationprev').html('');						// reset pagination
+//функция отображения строк таблицы, принимает Класс таблицы, с какой страницы отображать, кол-во отображаемых строк
+function paginator(table, page, rows){
+    //Считаем кол-во строк в таблице
+    let coutRows = $(table + ' tbody tr').length;
+    //с какой строки отображаем
+    let start = page * rows - rows;
 
-            lastPage = 1;
-            $('.pagination')
-                .find('li')
-                .slice(1, -1)
-                .remove();
-            var trnum = 0; // reset tr counter
-            var maxRows = parseInt($(this).val()); // get Max Rows from select option
+    paginatorPage('abr-pagination'+table.replace(/[^0-9]/g,""), coutRows, page, rows)
+    let trnum = 0;
 
-            if (maxRows == 5000) {
-                $('.pagination').hide();
-            } else {
-                $('.pagination').show();
-            }
+    $(table + ' tbody tr').hide();
 
-            var totalRows = $(table + ' tbody tr').length; // numbers of rows
-            $(table + ' tr:gt(0)').each(function() {
-                // each TR in  table and not the header
-                trnum++; // Start Counter
-                if (trnum > maxRows) {
-                    // if tr number gt maxRows
+    if(start == 0){
+        $(table + ' tbody tr:eq(0)').fadeIn()
+        trnum++
+    }
 
-                    $(this).hide(); // fade it out
-                }
-                if (trnum <= maxRows) {
-                    $(this).show();
-                } // else fade in Important in case if it ..
-            }); //  was fade out to fade it in
-            if (totalRows > maxRows) {
-                // if tr total rows gt max rows option
-                var pagenum = Math.ceil(totalRows / maxRows); // ceil total(rows/maxrows) to get ..
-                //	numbers of pages
-                for (var i = 1; i <= pagenum; ) {
-                    // for each page append pagination li
-                    $('.pagination #prev')
-                        .before(
-                            '<li data-page="' +
-                            i +
-                            '">\
-                                              <span>' +
-                            i++ +
-                            '<span class="sr-only">(current)</span></span>\
-                                            </li>'
-                        )
-                        .show();
-                } // end for i
-            } // end if row count > max rows
-            $('.pagination [data-page="1"]').addClass('active'); // add active class to the first li
-            $('.pagination li').on('click', function(evt) {
-                // on click each page
-                evt.stopImmediatePropagation();
-                evt.preventDefault();
-                var pageNum = $(this).attr('data-page'); // get it's number
-
-                var maxRows = parseInt($('#maxRows').val()); // get Max Rows from select option
-
-                if (pageNum == 'prev') {
-                    if (lastPage == 1) {
-                        return;
-                    }
-                    pageNum = --lastPage;
-                }
-                if (pageNum == 'next') {
-                    if (lastPage == $('.pagination li').length - 2) {
-                        return;
-                    }
-                    pageNum = ++lastPage;
-                }
-
-                lastPage = pageNum;
-                var trIndex = 0; // reset tr counter
-                $('.pagination li').removeClass('active'); // remove active class from all li
-                $('.pagination [data-page="' + lastPage + '"]').addClass('active'); // add active class to the clicked
-                // $(this).addClass('active');					// add active class to the clicked
-                limitPagging();
-                $(table + ' tr:gt(0)').each(function() {
-                    // each tr in table not the header
-                    trIndex++; // tr index counter
-                    // if tr index gt maxRows*pageNum or lt maxRows*pageNum-maxRows fade if out
-                    if (
-                        trIndex > maxRows * pageNum ||
-                        trIndex <= maxRows * pageNum - maxRows
-                    ) {
-                        $(this).hide();
-                    } else {
-                        $(this).show();
-                    } //else fade in
-                }); // end of for each tr in table
-            }); // end of on click pagination list
-            limitPagging();
-        })
-        .val(5)
-        .change();
-
-    // end of on select change
-
-    // END OF PAGINATION
+    $(table + ' tbody tr:gt('+start+')').each(function (){
+        if(trnum < rows){
+            $(this).fadeIn()
+        }
+        trnum++
+    })
 }
 
-function limitPagging(){
-    // alert($('.pagination li').length)
+//функция отображения нумерации пагинатора, принимающая класс пагинатора, кол-во всех строк таблицы и выбранную страницу пагинатора
+function paginatorPage(paginator, allRow, selected, rows){
+    let allPage = Math.ceil(allRow/rows);
+    //разница
+    let difference = allPage - selected;
+    let page = '';
+    let table = 'abr-table'+paginator.replace(/[^0-9]/g,"");
 
-    if($('.pagination li').length > 7 ){
-        if( $('.pagination li.active').attr('data-page') <= 3 ){
-            $('.pagination li:gt(5)').hide();
-            $('.pagination li:lt(5)').show();
-            $('.pagination [data-page="next"]').show();
-        }if ($('.pagination li.active').attr('data-page') > 3){
-            $('.pagination li:gt(0)').hide();
-            $('.pagination [data-page="next"]').show();
-            for( let i = ( parseInt($('.pagination li.active').attr('data-page'))  -2 )  ; i <= ( parseInt($('.pagination li.active').attr('data-page'))  + 2 ) ; i++ ){
-                $('.pagination [data-page="'+i+'"]').show();
 
+
+    if(allPage > 7){
+        if(selected < 5){ //1|2|3|4|5|6|...|n
+            for (let i=1; i<=5; i++){
+                let active = '';
+                if(i == selected){
+                    active = 'active';
+                }
+                page +=
+                    '<li class="'+active+'" onclick="paginator(`.'+table+'`,'+i+','+rows+')">' +
+                        '<span> '+i+'</span>' +
+                    '</li>';
+            }
+            page +=
+                '<li>' +
+                    '<span> ...</span>' +
+                '</li>';
+
+            let active=''
+            if(selected == allPage){
+                active = 'active';
+            }
+            page +=
+                '<li class="'+active+'" onclick="paginator(`.'+table+'`,'+allPage+','+rows+')">' +
+                    '<span> '+allPage+'</span>' +
+                '</li>';
+        }else if(selected >= 5 && difference > 3){ //   1|...|x-2|x-1|X|x+1|x+2|...|n
+            page +=
+                '<li onclick="paginator(`.'+table+'`,1,'+rows+')">' +
+                    '<span> 1</span>' +
+                '</li>';
+
+            page +=
+                '<li>' +
+                    '<span> ...</span>' +
+                '</li>';
+
+            for (let i=selected-2; i<=selected+2; i++){
+                let active = '';
+                if(i == selected){
+                    active = 'active';
+                }
+                page +=
+                    '<li class="'+active+'" onclick="paginator(`.'+table+'`,'+i+','+rows+')">' +
+                        '<span> '+i+'</span>' +
+                    '</li>';
             }
 
+            page +=
+                '<li>' +
+                    '<span> ...</span>' +
+                '</li>';
+        }else{ //   1|...|x-2|x-1|X|x+1|x+2|n|
+            page +=
+                '<li onclick="paginator(`.'+table+'`,1,'+rows+')">' +
+                    '<span> 1</span>' +
+                '</li>';
+
+            page +=
+                '<li>' +
+                    '<span> ...</span>' +
+                '</li>';
+
+            for (let i=allPage-4; i<=allPage; i++){
+                let active = '';
+                if(i == selected){
+                    active = 'active';
+                }
+                page +=
+                    '<li class="'+active+'" onclick="paginator(`.'+table+'`,'+i+','+rows+')">' +
+                        '<span> '+i+'</span>' +
+                    '</li>';
+            }
+        }
+    }else{
+        for (let i=1; i<=allPage; i++){
+            let active = '';
+            if(i == selected){
+                active = 'active';
+            }
+            page +=
+                '<li class="'+active+'" onclick="paginator(`.'+table+'`,'+i+','+rows+')">' +
+                    '<span> '+i+'</span>' +
+                '</li>';
         }
     }
+    $('.'+paginator+' .abr-pagination-number').html(page)
+
 }
+
 //__________ПАГИНАЦИЯ end____________
 
