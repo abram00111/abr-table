@@ -6,6 +6,7 @@
 }
 .abr-search{
     text-align: right;
+    width: 50%;
 }
 .abr-table thead tr th{
     padding-right: 15px;
@@ -82,7 +83,12 @@
 /*table tbody tr {*/
 /*    display: none;*/
 /*}*/
-
-
+.abr-button{
+    width: 50%;
+}
+.abr-head{
+    display: flex;
+    width: 100%;
+}
 
 

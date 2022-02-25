@@ -1,5 +1,5 @@
 
-let nubmer_table = 0;
+let number_table = 0;
 //Настройки плагина
 const settings = Object.fromEntries([
     ['search', true], //поиск
@@ -11,15 +11,15 @@ const settings = Object.fromEntries([
 
 //Ищем таблицы с классом abr-table
 $('.abr-table').each(function(){
-    nubmer_table++;
+    number_table++;
     //добавляем класс к таблице (это необходимо, если таблиц будет несколько, то именно этот по этому классу будем обращаться)
-    $(this).addClass('abr-table'+nubmer_table);
-    $(this).attr('data-tableID',nubmer_table);
+    $(this).addClass('abr-table'+number_table);
+    $(this).attr('data-tableID',number_table);
 
     //Если в настройках включена функция поиска, и таблица НЕ содержит класс "abr-off-search"
     if(settings.search ===true && !$(this).hasClass('abr-off-search')){
         //Добавляем поле фильтра по таблице
-        $(this).before('<div class="abr-search"><label for="search'+nubmer_table+'">Поиск </label> <input type="search" id="abr-table'+nubmer_table+'"></div>')
+        $(this).before('<div class="abr-head"><div class="abr-button"><button class="abr-xlsx" onclick="Excel('+number_table+')">Эксель</button></div><div class="abr-search"><label for="search'+number_table+'">Поиск </label> <input type="search" id="abr-table'+number_table+'"></div></div>')
     }
 
     //если включена пагинация
@@ -29,7 +29,7 @@ $('.abr-table').each(function(){
         $(this).after(
             '<div class="abr-pagination-container" >' +
                 '<nav>' +
-                    '<ul class="abr-pagination abr-pagination'+nubmer_table+'">' +
+                    '<ul class="abr-pagination abr-pagination'+number_table+'">' +
                         '<li data-page="prev" class="abr-paginator-prev">' +
                             '<span> &#171</span>' +
                         '</li>' +
@@ -43,13 +43,13 @@ $('.abr-table').each(function(){
                 '</nav>' +
             '</div>');
         //проверяем если есть корректный атрибут data-paginator, то выводим столько строк сколько указано в атрибуте
-        if($('.abr-table'+nubmer_table).attr('data-paginator') != undefined
-            && $('.abr-table'+nubmer_table).attr('data-paginator') != ''
-            && $('.abr-table'+nubmer_table).attr('data-paginator') > 0){
-            count_row = $('.abr-table'+nubmer_table).attr('data-paginator');
+        if($('.abr-table'+number_table).attr('data-paginator') != undefined
+            && $('.abr-table'+number_table).attr('data-paginator') != ''
+            && $('.abr-table'+number_table).attr('data-paginator') > 0){
+            count_row = $('.abr-table'+number_table).attr('data-paginator');
         }
 
-        paginator('.abr-table'+nubmer_table, 1, count_row)
+        paginator('.abr-table'+number_table, 1, count_row)
     }
 
 })
@@ -286,3 +286,14 @@ function paginatorPage(paginator, allRow, selected, rows){
 
 //__________ПАГИНАЦИЯ end____________
 
+//__________EXCEL start___________________
+function Excel_check(table){
+    let table_hed = $('.abr-table'+table+' thead tr th')
+    console.log(table_hed[0])
+}
+function Excel(table){
+    var table2excel = new Table2Excel();
+
+    table2excel.export(document.querySelectorAll("table.abr-table"+table));
+}
+//________EXCEL end______________________
